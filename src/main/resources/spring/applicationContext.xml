@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+	  http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+
+    <context:property-placeholder location="classpath:props/*.properties" ignore-unresolvable="true" file-encoding="UTF-8"/>
+    <!-- 扫描service及dao -->
+    <!--<context:component-scan base-package="com.run.cf.dao" />-->
+    <context:component-scan base-package="com.run.cf.service" />
+    <!--<context:component-scan base-package="com.run.cf.controller"/>-->
+    <!--开启注解调度支持 @Async @Scheduled-->
+    <task:annotation-driven/>
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+    <!-- 事务管理 -->
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+    <!--添加数据库配置文件-->
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE" />
+        <property name="ignoreResourceNotFound" value="true" />
+        <property name="locations">
+            <list>
+                <!-- 标准配置 -->
+                <value>classpath*:props/db.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 数据库连接池 -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+          destroy-method="close">
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="maxActive" value="30"/>
+        <property name="minIdle" value="5"/>
+    </bean>
+
+    <!-- 配置sqlsessionFactory -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="configLocation" value="classpath:mybatis/SqlMapConfig.xml"/>
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+    <!-- 配置扫描器创建mapper代理对象 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer" >
+        <property name="basePackage" value="com.run.cf.dao.mapper"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+    </bean>
+</beans>
